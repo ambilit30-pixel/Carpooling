@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}Edit Ride{% endblock %}
-
+{% block title %}Edit Ride — Car Pooling{% endblock %}
 {% block content %}
-<h2>Edit Ride</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Update Ride">
-</form>
+<div style="max-width:760px;margin:0 auto">
+    <h2 class="section">Edit Ride</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="field"><label>Source</label>{{ form.source }}</div>
+        <div class="field"><label>Destination</label>{{ form.destination }}</div>
+        <div class="field"><label>When (local)</label>{{ form.arrivaldate }}</div>
+        <div class="field"><label>Seats reserved by you</label>{{ form.passenger }}</div>
+        <div class="field"><label>Sharable?</label>{{ form.sharable }}</div>
+
+        <div class="actions">
+            <button class="btn" type="submit">Save Changes</button>
+            <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

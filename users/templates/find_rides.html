@@ -1,18 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}Find Rides{% endblock %}
-
+{% block title %}Find Rides — Car Pooling{% endblock %}
 {% block content %}
-<h2>Find Rides to Join</h2>
-<form method="get">
-    <label for="source">Source</label>
-    <input type="text" name="source" value="{{ request.GET.source }}">
-    
-    <label for="destination">Destination</label>
-    <input type="text" name="destination" value="{{ request.GET.destination }}">
-    
-    <label for="arrivaldate">Arrival Date</label>
-    <input type="date" name="arrivaldate" value="{{ request.GET.arrivaldate }}">
-    
-    <input type="submit" value="Search">
-</form>
+<div style="max-width:720px;margin:0 auto">
+    <h2 class="section">Find a Ride to Share</h2>
+    <p class="muted">Search by destination and approximate arrival window.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="field"><label>Destination</label>{{ form.destination }}</div>
+        <div class="field"><label>Earliest arrival (local)</label>{{ form.earlyarrival }}</div>
+        <div class="field"><label>Latest arrival (local)</label>{{ form.latearrival }}</div>
+        <div class="field"><label>Seats required</label>{{ form.passenger }}</div>
+
+        <div class="actions">
+            <button class="btn" type="submit">Search</button>
+            <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

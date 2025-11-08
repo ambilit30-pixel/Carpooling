@@ -1,40 +1,37 @@
 from django.urls import path
 from . import views
 
-app_name = 'users'
+app_name = 'rides'
 
 urlpatterns = [
-
-    # ---------------------- Authentication ----------------------
+    # auth
     path('register/', views.register, name='register'),
-    path('login/', views.login_view, name='login'),
+    path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    # add this to the urlpatterns list
+    path('profile/revert-to-passenger/', views.revert_to_passenger, name='revert_to_passenger'),
 
-    # ---------------------- Dashboard ----------------------
+
+    # dashboard & profile
     path('dashboard/', views.dashboard, name='dashboard'),
-
-    # ---------------------- Profile ----------------------
     path('profile/', views.profile, name='profile'),
-    path('profile/edit/', views.editinfo, name='editinfo'),
-    path('profile/changepassword/', views.changepassword, name='changepassword'),
-    path('profile/regisdriver/', views.regisdriver, name='regisdriver'),
+    path('profile/edit/', views.edit_info, name='edit_info'),
+    path('profile/change-password/', views.change_password, name='change_password'),
+    path('profile/register-driver/', views.register_driver, name='register_driver'),
 
-    # ---------------------- Ride Management ----------------------
-    path('ride/create/', views.create_ride, name='create_ride'),
-    path('ride/edit/<int:ride_id>/', views.edit_ride, name='edit_ride'),
-    path('ride/delete/<int:ride_id>/', views.delete_ride, name='delete_ride'),
-    path('ride/assign_driver/<int:ride_id>/', views.assign_driver, name='assign_driver'),
-    path('ride/start/<int:ride_id>/', views.start_ride, name='start_ride'),
-    path('ride/complete/<int:ride_id>/', views.complete_ride, name='complete_ride'),
+    # ride CRUD
+    path('rides/create/', views.create_ride, name='create_ride'),
+    path('rides/<int:ride_id>/edit/', views.edit_ride, name='edit_ride'),
+    path('rides/<int:ride_id>/delete/', views.delete_ride, name='delete_ride'),
 
-    # ---------------------- Ride Sharing ----------------------
-    path('rideshare/find/', views.find_rides_to_share, name='find_rides_to_share'),
-    path('rideshare/join/<int:ride_id>/', views.join_ride, name='join_ride'),
-    path('rideshare/leave/<int:ride_id>/', views.leave_ride, name='leave_ride'),
-    path('rideshare/edit/<int:ride_id>/', views.edit_share, name='edit_share'),
+    # assign/start/complete
+    path('rides/<int:ride_id>/assign-driver/', views.assign_driver, name='assign_driver'),
+    path('rides/<int:ride_id>/start/', views.start_ride, name='start_ride'),
+    path('rides/<int:ride_id>/complete/', views.complete_ride, name='complete_ride'),
 
-    # ---------------------- Current Ride / Driver Actions ----------------------
-    path('ride/current/<int:ride_id>/', views.curtride, name='curtride'),
-    path('ride/find_driver/<int:ride_id>/', views.find_ridedriver, name='find_ridedriver'),
-    path('ride/handle_drive/<int:ride_id>/', views.handle_drive, name='handle_drive'),
+    # sharing
+    path('share/find/', views.find_rides_to_share, name='find_rides_to_share'),
+    path('share/<int:ride_id>/join/', views.join_ride, name='join_ride'),
+    path('share/<int:ride_id>/leave/', views.leave_ride, name='leave_ride'),
+    path('share/<int:ride_id>/edit/', views.edit_share, name='edit_share'),
 ]

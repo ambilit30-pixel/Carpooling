@@ -1,174 +1,239 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard — Car Pooling{% endblock %}
 
 {% block content %}
-<h2>Dashboard</h2>
+<style>
+    .dashboard-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 20px;
+    }
 
-{% if user.userprofile.role == 'driver' %}
-<section>
-    <h3>Rides You Are Driving</h3>
-    {% if driving_rides %}
+    .section-title {
+        color: #1976d2;
+        font-size: 22px;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .section-subtitle {
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        padding: 20px;
+    }
+
+    .card table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .card th,
+    .card td {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 15px;
+    }
+
+    .card th {
+        color: #555;
+        font-weight: 600;
+        background: #fafafa;
+    }
+
+    .action-btn {
+        background: #1976d2;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+
+    .action-btn:hover {
+        background: #0d47a1;
+    }
+
+    .action-btn.ghost {
+        background: transparent;
+        border: 1.5px solid #1976d2;
+        color: #1976d2;
+    }
+
+    .action-btn.ghost:hover {
+        background: #1976d2;
+        color: white;
+    }
+
+    .empty {
+        color: #777;
+        font-size: 14px;
+        padding: 10px 0;
+    }
+
+    .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .card table {
+            font-size: 14px;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <h2 class="section-title">Welcome, {{ request.user.first_name|default:request.user.username }}</h2>
+    <p class="section-subtitle">
+        Role: <strong>{{ profile.get_role_display }}</strong>
+    </p>
+
+    <!-- ✅ Rides Created -->
+    <div class="card">
+        <h3 class="section-title">Your Rides</h3>
+        <p class="section-subtitle">Rides you have posted</p>
+
+        {% if user_rides %}
         <table>
             <thead>
                 <tr>
-                    <th>Destination</th>
-                    <th>Arrival Date</th>
-                    <th>Passengers</th>
+                    <th>Source → Destination</th>
+                    <th>Arrival Time</th>
+                    <th>Seats</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for ride in driving_rides %}
+                {% for ride in user_rides %}
                 <tr>
-                    <td>{{ ride.destination }}</td>
-                    <td>{{ ride.arrivaldate }}</td>
+                    <td>{{ ride.source }} → {{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate|date:"Y-m-d H:i" }}</td>
                     <td>{{ ride.passenger }}</td>
-                    <td>{{ ride.status|capfirst }}</td>
+                    <td>{{ ride.get_status_display }}</td>
                     <td>
-                        {% if ride.status == 'open' %}
-                            <a href="{% url 'users:start_ride' ride.id %}">Start Ride</a>
-                        {% elif ride.status == 'driving' %}
-                            <a href="{% url 'users:complete_ride' ride.id %}">Complete Ride</a>
-                        {% endif %}
-                        | <a href="{% url 'users:handledrive' ride.id %}">Manage</a>
+                        <a href="{% url 'rides:edit_ride' ride.id %}" class="action-btn ghost">Edit</a>
+                        <form method="post" action="{% url 'rides:delete_ride' ride.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No rides assigned to you yet.</p>
-    {% endif %}
-</section>
+        {% else %}
+        <p class="empty">You haven't created any rides yet.</p>
+        {% endif %}
+    </div>
 
-<section>
-    <a href="{% url 'users:create_ride' %}" class="btn">Create Ride</a>
-</section>
+    <!-- ✅ Driving Rides -->
+    <div class="card">
+        <h3 class="section-title">Driving Rides</h3>
+        <p class="section-subtitle">Rides where you are the driver</p>
 
-{% else %}
-<section>
-    <h3>Available Rides to Join</h3>
-    {% if shared_rides %}
+        {% if driving_rides %}
         <table>
             <thead>
                 <tr>
-                    <th>Destination</th>
-                    <th>Arrival Date</th>
-                    <th>Driver</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ride in shared_rides %}
-                <tr>
-                    <td>{{ ride.destination }}</td>
-                    <td>{{ ride.arrivaldate }}</td>
-                    <td>{{ ride.driver.get_full_name }}</td>
-                    <td>
-                        <a href="{% url 'users:join_ride' ride.id %}">Join Ride</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No available rides. <a href="{% url 'users:findshare' %}">Find rides to join</a>.</p>
-    {% endif %}
-</section>
-{% endif %}
-
-<section style="text-align:center; margin-top:40px;">
-    <a href="{% url 'users:create_ride' %}" class="btn">Create New Ride</a>
-    {% if user.userprofile.role != 'driver' %}
-        <a href="{% url 'users:regisdriver' %}" class="btn btn-secondary">Register as Driver</a>
-    {% endif %}
-</section>
-{% endblock %}
-{% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
-
-{% block content %}
-<h2>Dashboard</h2>
-
-{% if user.userprofile.role == 'driver' %}
-<section>
-    <h3>Rides You Are Driving</h3>
-    {% if driving_rides %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Destination</th>
-                    <th>Arrival Date</th>
-                    <th>Passengers</th>
+                    <th>Source → Destination</th>
+                    <th>Date</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Control</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ride in driving_rides %}
                 <tr>
-                    <td>{{ ride.destination }}</td>
-                    <td>{{ ride.arrivaldate }}</td>
-                    <td>{{ ride.passenger }}</td>
-                    <td>{{ ride.status|capfirst }}</td>
+                    <td>{{ ride.source }} → {{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate|date:"Y-m-d H:i" }}</td>
+                    <td>{{ ride.get_status_display }}</td>
                     <td>
                         {% if ride.status == 'open' %}
-                            <a href="{% url 'users:start_ride' ride.id %}">Start Ride</a>
+                        <form method="post" action="{% url 'rides:start_ride' ride.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="action-btn">Start</button>
+                        </form>
                         {% elif ride.status == 'driving' %}
-                            <a href="{% url 'users:complete_ride' ride.id %}">Complete Ride</a>
+                        <form method="post" action="{% url 'rides:complete_ride' ride.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="action-btn ghost">Complete</button>
+                        </form>
                         {% endif %}
-                        | <a href="{% url 'users:handledrive' ride.id %}">Manage</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No rides assigned to you yet.</p>
-    {% endif %}
-</section>
+        {% else %}
+        <p class="empty">You have no driving rides assigned.</p>
+        {% endif %}
+    </div>
 
-<section>
-    <a href="{% url 'users:create_ride' %}" class="btn">Create Ride</a>
-</section>
+    <!-- ✅ Shared Rides -->
+    <div class="card">
+        <h3 class="section-title">Rides You Joined</h3>
+        <p class="section-subtitle">Rides you are sharing with others</p>
 
-{% else %}
-<section>
-    <h3>Available Rides to Join</h3>
-    {% if shared_rides %}
+        {% if shared_rides %}
         <table>
             <thead>
                 <tr>
-                    <th>Destination</th>
-                    <th>Arrival Date</th>
+                    <th>Route</th>
+                    <th>Date</th>
                     <th>Driver</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for ride in shared_rides %}
+                {% for r in shared_rides %}
                 <tr>
-                    <td>{{ ride.destination }}</td>
-                    <td>{{ ride.arrivaldate }}</td>
-                    <td>{{ ride.driver.get_full_name }}</td>
+                    <td>{{ r.source }} → {{ r.destination }}</td>
+                    <td>{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                    <td>{% if r.driver %}{{ r.driver.username }}{% else %}Unassigned{% endif %}</td>
                     <td>
-                        <a href="{% url 'users:join_ride' ride.id %}">Join Ride</a>
+                        <a href="{% url 'rides:edit_share' r.id %}" class="action-btn ghost">Edit</a>
+                        <form method="post" action="{% url 'rides:leave_ride' r.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="action-btn">Leave</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No available rides. <a href="{% url 'users:findshare' %}">Find rides to join</a>.</p>
-    {% endif %}
-</section>
-{% endif %}
+        {% else %}
+        <p class="empty">You haven't joined any shared rides yet.</p>
+        {% endif %}
+    </div>
 
-<section style="text-align:center; margin-top:40px;">
-    <a href="{% url 'users:create_ride' %}" class="btn">Create New Ride</a>
-    {% if user.userprofile.role != 'driver' %}
-        <a href="{% url 'users:regisdriver' %}" class="btn btn-secondary">Register as Driver</a>
-    {% endif %}
-</section>
+    <!-- ✅ Quick Actions -->
+    <div class="card">
+        <h3 class="section-title">Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="{% url 'rides:create_ride' %}" class="action-btn">Offer a Ride</a>
+            <a href="{% url 'rides:find_rides_to_share' %}" class="action-btn ghost">Find a Ride</a>
+            {% if profile and profile.role == 'driver' %}
+            <form method="post" action="{% url 'rides:revert_to_passenger' %}">
+                {% csrf_token %}
+                <button type="submit" class="action-btn ghost">Switch to Passenger</button>
+            </form>
+            {% else %}
+            <a href="{% url 'rides:register_driver' %}" class="action-btn ghost">Register as Driver</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

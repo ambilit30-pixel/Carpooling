@@ -1,13 +1,26 @@
 {% extends 'base.html' %}
-{% block title %}Join Ride{% endblock %}
-
+{% block title %}Join Ride — Car Pooling{% endblock %}
 {% block content %}
-<h2>Join Ride</h2>
-<form method="post">
-    {% csrf_token %}
-    <p>Ride from {{ ride.source }} to {{ ride.destination }} on {{ ride.arrivaldate }}</p>
-    <label for="passenger_count">Number of Passengers</label>
-    <input type="number" name="passenger_count" value="1" min="1" max="{{ ride.available_seats }}">
-    <input type="submit" value="Join Ride">
-</form>
+<div style="max-width:680px;margin:0 auto">
+    <h2 class="section">Join Ride</h2>
+    <div class="panel">
+        <p><strong>{{ ride.source }} → {{ ride.destination }}</strong></p>
+        <p class="small">When: {{ ride.arrivaldate|date:"Y-m-d H:i" }}</p>
+        <p class="small">Driver: {% if ride.driver %}{{ ride.driver.username }}{% else %}<span
+                class="muted">Unassigned</span>{% endif %}</p>
+        <p class="small">Seats left: {{ ride.available_seats }}</p>
+
+        <form method="post" style="margin-top:12px">
+            {% csrf_token %}
+            <div class="field">
+                <label>Seats to book</label>
+                <input type="number" name="passenger_count" min="1" max="{{ ride.available_seats }}" value="1">
+            </div>
+            <div class="actions">
+                <button class="btn" type="submit">Join Ride</button>
+                <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
