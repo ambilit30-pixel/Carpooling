@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+{% if user.userprofile.role == 'driver' %}
+<section>
+    <h3>Rides You Are Driving</h3>
+    {% if driving_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Arrival Date</th>
+                    <th>Passengers</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ride in driving_rides %}
+                <tr>
+                    <td>{{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate }}</td>
+                    <td>{{ ride.passenger }}</td>
+                    <td>{{ ride.status|capfirst }}</td>
+                    <td>
+                        {% if ride.status == 'open' %}
+                            <a href="{% url 'users:start_ride' ride.id %}">Start Ride</a>
+                        {% elif ride.status == 'driving' %}
+                            <a href="{% url 'users:complete_ride' ride.id %}">Complete Ride</a>
+                        {% endif %}
+                        | <a href="{% url 'users:handledrive' ride.id %}">Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No rides assigned to you yet.</p>
+    {% endif %}
+</section>
+
+<section>
+    <a href="{% url 'users:create_ride' %}" class="btn">Create Ride</a>
+</section>
+
+{% else %}
+<section>
+    <h3>Available Rides to Join</h3>
+    {% if shared_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Arrival Date</th>
+                    <th>Driver</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ride in shared_rides %}
+                <tr>
+                    <td>{{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate }}</td>
+                    <td>{{ ride.driver.get_full_name }}</td>
+                    <td>
+                        <a href="{% url 'users:join_ride' ride.id %}">Join Ride</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No available rides. <a href="{% url 'users:findshare' %}">Find rides to join</a>.</p>
+    {% endif %}
+</section>
+{% endif %}
+
+<section style="text-align:center; margin-top:40px;">
+    <a href="{% url 'users:create_ride' %}" class="btn">Create New Ride</a>
+    {% if user.userprofile.role != 'driver' %}
+        <a href="{% url 'users:regisdriver' %}" class="btn btn-secondary">Register as Driver</a>
+    {% endif %}
+</section>
+{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+{% if user.userprofile.role == 'driver' %}
+<section>
+    <h3>Rides You Are Driving</h3>
+    {% if driving_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Arrival Date</th>
+                    <th>Passengers</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ride in driving_rides %}
+                <tr>
+                    <td>{{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate }}</td>
+                    <td>{{ ride.passenger }}</td>
+                    <td>{{ ride.status|capfirst }}</td>
+                    <td>
+                        {% if ride.status == 'open' %}
+                            <a href="{% url 'users:start_ride' ride.id %}">Start Ride</a>
+                        {% elif ride.status == 'driving' %}
+                            <a href="{% url 'users:complete_ride' ride.id %}">Complete Ride</a>
+                        {% endif %}
+                        | <a href="{% url 'users:handledrive' ride.id %}">Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No rides assigned to you yet.</p>
+    {% endif %}
+</section>
+
+<section>
+    <a href="{% url 'users:create_ride' %}" class="btn">Create Ride</a>
+</section>
+
+{% else %}
+<section>
+    <h3>Available Rides to Join</h3>
+    {% if shared_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Arrival Date</th>
+                    <th>Driver</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ride in shared_rides %}
+                <tr>
+                    <td>{{ ride.destination }}</td>
+                    <td>{{ ride.arrivaldate }}</td>
+                    <td>{{ ride.driver.get_full_name }}</td>
+                    <td>
+                        <a href="{% url 'users:join_ride' ride.id %}">Join Ride</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No available rides. <a href="{% url 'users:findshare' %}">Find rides to join</a>.</p>
+    {% endif %}
+</section>
+{% endif %}
+
+<section style="text-align:center; margin-top:40px;">
+    <a href="{% url 'users:create_ride' %}" class="btn">Create New Ride</a>
+    {% if user.userprofile.role != 'driver' %}
+        <a href="{% url 'users:regisdriver' %}" class="btn btn-secondary">Register as Driver</a>
+    {% endif %}
+</section>
+{% endblock %}

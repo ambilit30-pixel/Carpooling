@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<h2>Your Profile</h2>
+<p><strong>Username:</strong> {{ user.username }}</p>
+<p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<p><strong>Role:</strong> {{ user.userprofile.role|capfirst }}</p>
+{% if user.userprofile.role == 'driver' %}
+<p><strong>Vehicle:</strong> {{ user.userprofile.vehicle }}</p>
+<p><strong>Plate:</strong> {{ user.userprofile.plate }}</p>
+<p><strong>Capacity:</strong> {{ user.userprofile.capacity }}</p>
+<p><strong>Special:</strong> {{ user.userprofile.special }}</p>
+{% endif %}
+<a href="{% url 'users:editinfo' %}" class="btn">Edit Info</a>
+<a href="{% url 'users:changepassword' %}" class="btn btn-secondary">Change Password</a>
+{% endblock %}

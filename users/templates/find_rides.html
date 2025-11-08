@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Find Rides{% endblock %}
+
+{% block content %}
+<h2>Find Rides to Join</h2>
+<form method="get">
+    <label for="source">Source</label>
+    <input type="text" name="source" value="{{ request.GET.source }}">
+    
+    <label for="destination">Destination</label>
+    <input type="text" name="destination" value="{{ request.GET.destination }}">
+    
+    <label for="arrivaldate">Arrival Date</label>
+    <input type="date" name="arrivaldate" value="{{ request.GET.arrivaldate }}">
+    
+    <input type="submit" value="Search">
+</form>
+{% endblock %}

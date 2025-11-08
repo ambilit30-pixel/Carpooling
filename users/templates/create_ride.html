@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Create Ride{% endblock %}
+
+{% block content %}
+<h2>Create a Ride</h2>
+<form method="post">
+    {% csrf_token %}
+    <label for="source">Source</label>
+    {{ form.source }}
+    
+    <label for="destination">Destination</label>
+    {{ form.destination }}
+    
+    <label for="arrivaldate">Arrival Date</label>
+    {{ form.arrivaldate }}
+    
+    <label for="passenger">Number of Passengers</label>
+    {{ form.passenger }}
+    
+    <label for="sharable">Sharable?</label>
+    {{ form.sharable }}
+    
+    <input type="submit" value="Create Ride">
+</form>
+{% endblock %}

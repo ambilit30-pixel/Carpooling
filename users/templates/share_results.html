@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Available Rides{% endblock %}
+
+{% block content %}
+<h2>Available Rides</h2>
+{% if rides %}
+<table>
+    <thead>
+        <tr>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Arrival</th>
+            <th>Driver</th>
+            <th>Seats Available</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ride in rides %}
+        <tr>
+            <td>{{ ride.source }}</td>
+            <td>{{ ride.destination }}</td>
+            <td>{{ ride.arrivaldate }}</td>
+            <td>{{ ride.driver.get_full_name }}</td>
+            <td>{{ ride.available_seats }}</td>
+            <td><a href="{% url 'users:join_ride' ride.id %}">Join</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No rides found matching your criteria.</p>
+{% endif %}
+{% endblock %}
