@@ -1,4 +1,4 @@
-from django.conf import settings
+
 from django.db import models, transaction, IntegrityError
 from django.contrib.auth.models import User
 from django.db.models import Sum
@@ -32,11 +32,7 @@ def ensure_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance, role=UserProfile.ROLE_USER)
 
-# add imports near top if not present
-from django.db.models import Sum
-from django.utils import timezone
-from django.db import transaction, IntegrityError
-from django.core.exceptions import ValidationError
+
 
 class Ride(models.Model):
     STATUS_OPEN = 'open'

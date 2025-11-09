@@ -63,7 +63,8 @@ class ChangePasswordForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
-        p1 = cleaned.get('new_password1'); p2 = cleaned.get('new_password2')
+        p1 = cleaned.get('new_password1')
+        p2 = cleaned.get('new_password2')
         if p1 and p2 and p1 != p2:
             raise ValidationError("New passwords do not match")
         return cleaned
@@ -113,7 +114,8 @@ class ShareForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
-        early = cleaned.get('earlyarrival'); late = cleaned.get('latearrival')
+        early = cleaned.get('earlyarrival')
+        late = cleaned.get('latearrival')
         if early and late:
             if timezone.is_naive(early):
                 early = timezone.make_aware(early, timezone.get_current_timezone())
@@ -121,7 +123,8 @@ class ShareForm(forms.Form):
                 late = timezone.make_aware(late, timezone.get_current_timezone())
             if early > late:
                 raise ValidationError("Early arrival cannot be after late arrival")
-            cleaned['earlyarrival'] = early; cleaned['latearrival'] = late
+            cleaned['earlyarrival'] = early 
+            cleaned['latearrival'] = late
         return cleaned
 
 class ShareEditForm(forms.ModelForm):

@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.contrib.auth.models import User
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
-
+import logging
 from .models import Ride, RideShare, UserProfile
 from .forms import (
     RegistrationForm, LoginForm, EditInfoForm, ChangePasswordForm,
@@ -27,10 +27,10 @@ def register(request):
             return redirect('rides:login')
     else:
         form = RegistrationForm()
-    return render(request, 'rides/register.html', {'form': form})
+    return render(request, 'rides/register.html', {'form': form , "user": user})
 
-import logging
-logger = logging.getLogger(__name__)
+
+
 
 
 
