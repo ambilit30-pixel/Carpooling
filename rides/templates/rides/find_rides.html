@@ -1,0 +1,313 @@
+{% extends 'rides/base.html' %}
+{% block title %}Find Rides{% endblock %}
+{% block header_title %}Find Rides{% endblock %}
+
+{% block content %}
+<style>
+    /* Scoped Find Rides styles (same as before) */
+    .find-wrap {
+        max-width: 1100px;
+        margin: 12px auto;
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 18px;
+        align-items: start;
+    }
+
+    @media (max-width:980px) {
+        .find-wrap {
+            grid-template-columns: 1fr;
+            padding: 0 12px
+        }
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(4, 88, 150, 0.06);
+    }
+
+    h2.page-title {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        color: var(--text);
+    }
+
+    .muted {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    form.search-form {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    @media (max-width:640px) {
+        .row {
+            grid-template-columns: 1fr
+        }
+    }
+
+    label.field {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .field-input,
+    select,
+    input[type="text"],
+    input[type="number"],
+    textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #e8f3fb;
+        background: linear-gradient(180deg, #fff, #fbfeff);
+        font-size: 14px;
+        color: var(--text);
+        outline: none;
+    }
+
+    .field-input:focus,
+    select:focus {
+        box-shadow: 0 6px 18px rgba(3, 102, 153, 0.08);
+        border-color: var(--accent-2);
+    }
+
+    .helper {
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 6px;
+    }
+
+    .btn {
+        background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 0;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn.ghost {
+        background: transparent;
+        border: 1px solid rgba(0, 122, 204, 0.12);
+        color: var(--accent-2);
+        padding: 9px 12px;
+        border-radius: 10px;
+    }
+
+    .small-ghost {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        color: var(--muted);
+    }
+
+    .sidebar .hint {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .hint .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+        color: white;
+        font-weight: 700;
+    }
+
+    .recent-list {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .recent-item {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #fbfeff, #ffffff);
+        border: 1px solid #eef6ff;
+        font-size: 14px;
+        color: var(--muted);
+    }
+
+    .error {
+        color: #b45309;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+</style>
+
+<div class="find-wrap">
+    <div class="card" role="region" aria-labelledby="findTitle">
+        <h2 id="findTitle" class="page-title">Find Rides to Share</h2>
+        <div class="muted">Search existing rides that match your destination and time window.</div>
+
+        <form class="search-form" method="post" id="findForm" novalidate>
+            {% csrf_token %}
+
+            <!-- destination -->
+            <div>
+                <label class="field" for="id_destination">Destination</label>
+                {{ form.destination }}
+                {% if form.destination.errors %}
+                <div class="error">{{ form.destination.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- times row -->
+            <div class="row">
+                <div>
+                    <label class="field" for="id_earlyarrival">Earliest arrival</label>
+                    {{ form.earlyarrival }}
+                    {% if form.earlyarrival.errors %}<div class="error">{{ form.earlyarrival.errors }}</div>{% endif %}
+                    <div class="helper">You can be flexible — earlier arrival helps match more rides.</div>
+                </div>
+
+                <div>
+                    <label class="field" for="id_latearrival">Latest arrival</label>
+                    {{ form.latearrival }}
+                    {% if form.latearrival.errors %}<div class="error">{{ form.latearrival.errors }}</div>{% endif %}
+                    <div class="helper">Latest time you can reach the destination.</div>
+                </div>
+            </div>
+
+            <!-- passengers -->
+            <div>
+                <label class="field" for="id_passenger">Passengers</label>
+                {{ form.passenger }}
+                {% if form.passenger.errors %}<div class="error">{{ form.passenger.errors }}</div>{% endif %}
+            </div>
+
+            <!-- actions -->
+            <div class="actions">
+                <button class="btn" type="submit" id="searchBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24"
+                        style="vertical-align:middle;margin-right:8px;opacity:.95">
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" />
+                    </svg>
+                    Search
+                </button>
+
+                <button type="button" id="clearBtn" class="btn ghost">Clear</button>
+
+                <a href="{% url 'rides:dashboard' %}" class="small-ghost">Back to dashboard</a>
+            </div>
+
+            <!-- client-side validation error -->
+            <div id="timeError" class="error" style="display:none">Earliest arrival must be before or equal to Latest
+                arrival.</div>
+        </form>
+    </div>
+
+    <!-- sidebar -->
+    <aside class="card sidebar" role="complementary" aria-labelledby="tipsTitle">
+        <h3 id="tipsTitle" style="margin:0 0 8px 0">Quick Tips</h3>
+
+        <div class="hint">
+            <div class="icon">T</div>
+            <div>
+                <div style="font-weight:700">Be flexible</div>
+                <div class="muted" style="margin-top:4px">Increasing your time window yields more matches.</div>
+            </div>
+        </div>
+
+        <div class="hint">
+            <div class="icon">S</div>
+            <div>
+                <div style="font-weight:700">Seat count</div>
+                <div class="muted" style="margin-top:4px">Set passengers accurately to find rides with enough seats.
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px">
+            <div class="muted" style="font-weight:700;margin-bottom:8px">Recent searches</div>
+            <div class="recent-list" id="recentList">
+                {% if recent_searches %}
+                {% for s in recent_searches %}
+                <div class="recent-item">{{ s.destination }} • {{ s.earlyarrival|date:"Y-m-d H:i" }} → {{s.latearrival|date:"Y-m-d H:i" }}</div>
+                {% endfor %}
+                {% else %}
+                <div class="recent-item muted">No recent searches</div>
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('findForm');
+        // prefer selecting by name so it works whether Django used default ids or custom ones
+        const early = document.querySelector('[name="earlyarrival"]');
+        const late = document.querySelector('[name="latearrival"]');
+        const timeError = document.getElementById('timeError');
+        const clearBtn = document.getElementById('clearBtn');
+
+        function parseDT(val) {
+            if (!val) return null;
+            const d = new Date(val);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function validateTimes() {
+            const e = early ? parseDT(early.value) : null;
+            const l = late ? parseDT(late.value) : null;
+            if (e && l && e.getTime() > l.getTime()) {
+                timeError.style.display = 'block';
+                return false;
+            }
+            timeError.style.display = 'none';
+            return true;
+        }
+
+        if (early) early.addEventListener('change', validateTimes);
+        if (late) late.addEventListener('change', validateTimes);
+
+        form.addEventListener('submit', function (e) {
+            if (!validateTimes()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        clearBtn && clearBtn.addEventListener('click', function () {
+            form.querySelectorAll('input, select, textarea').forEach(function (el) {
+                if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+                else el.value = '';
+            });
+            timeError.style.display = 'none';
+        });
+    })();
+</script>
+{% endblock %}

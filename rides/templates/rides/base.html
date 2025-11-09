@@ -1,0 +1,534 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Car Pooling{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-1: #e9f7ff;
+            --sky-2: #ffffff;
+            --accent-1: #00b4ff;
+            --accent-2: #007acc;
+            --surface: #ffffff;
+            --muted: #6b7280;
+            --text: #0b2540;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --shadow: 0 8px 30px rgba(4, 88, 150, 0.08);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --container-max: 1100px;
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 76px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(180deg, var(--sky-1), var(--sky-2));
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== Layout ===== */
+        .app {
+            display: flex;
+            min-height: 100vh;
+            gap: 20px;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            transition: width .22s ease;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sb-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sb-logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+        }
+
+        .sb-title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .sb-tag {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: -2px;
+        }
+
+        .sb-sep {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 6px 0 0 0;
+            border-radius: 2px;
+        }
+
+        .sb-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .sb-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .sb-item svg {
+            width: 18px;
+            height: 18px;
+            opacity: .9;
+            flex-shrink: 0;
+        }
+
+        .sb-item.active {
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(4, 88, 150, 0.06);
+        }
+
+        .sb-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+        }
+
+        .sb-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* ===== Main content area ===== */
+        .main-col {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - var(--sidebar-width));
+            max-width: calc(var(--container-max));
+            margin: 28px auto;
+        }
+
+        header.topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow);
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hamburger {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, #f6fbff, #ffffff);
+            border: 1px solid #eef6ff;
+            cursor: pointer;
+        }
+
+        .top-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .container {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-top: 16px;
+            box-shadow: var(--shadow);
+            min-height: 60vh;
+        }
+
+        /* ===== Messages ===== */
+        .messages {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .msg.info {
+            background: #eef7ff;
+            color: var(--text);
+            border-left: 4px solid var(--accent-1)
+        }
+
+        .msg.success {
+            background: #e8f5e9;
+            color: var(--success);
+            border-left: 4px solid var(--success)
+        }
+
+        .msg.error {
+            background: #fdecea;
+            color: var(--danger);
+            border-left: 4px solid var(--danger)
+        }
+
+        /* ===== Table / helper classes ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--muted);
+        }
+
+        th {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--accent-2);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        /* responsive */
+        @media (max-width: 980px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-col {
+                width: auto;
+                margin: 12px;
+            }
+        }
+
+        /* collapsed small sidebar handling */
+        .sidebar-collapsed .sb-title,
+        .sidebar-collapsed .sb-tag {
+            display: none;
+        }
+
+        .sidebar-collapsed .sb-item span.label {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="appRoot">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main sidebar">
+            <div class="sb-brand">
+                <div class="sb-logo">CP</div>
+                <div>
+                    <div class="sb-title"><a href="{% url 'rides:dashboard' %}" style="color:inherit">Carpooling</a>
+                    </div>
+                    <div class="sb-tag">Smart rides, fewer cars</div>
+                </div>
+            </div>
+
+            <div class="sb-sep"></div>
+
+            <nav class="sb-nav" role="menu" aria-label="Primary">
+                <a href="{% url 'rides:dashboard' %}"
+                    class="sb-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 13h8V3H3v10zM13 21h8V11h-8v10zM13 3v6h8V3h-8zM3 21h8v-8H3v8z" />
+                    </svg>
+                    <span class="label">Dashboard</span>
+                </a>
+
+                <a href="{% url 'rides:my_rides' %}"
+                    class="sb-item {% if request.resolver_match.url_name == 'my_rides' %}active{% endif %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 7h18M3 12h18M3 17h10" />
+                    </svg>
+                    <span class="label">My Rides</span>
+                </a>
+
+                <a href="{% url 'rides:find_rides_to_share' %}"
+                    class="sb-item {% if request.resolver_match.url_name == 'rides_list' %}active{% endif %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 12h-6l-2 3-2-6-2 3H2" />
+                    </svg>
+                    <span class="label">Find Rides</span>
+                </a>
+
+                <a href="{% url 'rides:create_ride' %}"
+                    class="sb-item {% if request.resolver_match.url_name == 'create_ride' %}active{% endif %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span class="label">Create Ride</span>
+                </a>
+            </nav>
+
+            <div class="sb-footer">
+                {% if user.is_authenticated %}
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div style="flex:1">
+                        <div class="small muted">Signed in as</div>
+                        <div style="font-weight:700">{{ user.first_name|default:user.username }}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <a href="{% url 'rides:profile' %}" class="btn ghost" style="padding:8px 10px">Profile</a>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'rides:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn ghost">Logout</button>
+                </form>
+                {% else %}
+                <a href="{% url 'rides:login' %}" class="btn">Login</a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- MAIN COLUMN -->
+        <div class="main-col">
+            <header class="topbar" role="banner">
+                <div class="top-left">
+                    <div class="hamburger" id="sidebarToggle" aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 6h18M3 12h18M3 18h18" />
+                        </svg>
+                    </div>
+                    <div class="top-title">{% block header_title %}Car Pooling{% endblock %}</div>
+                </div>
+
+                <div class="top-actions">
+                    <div class="search" role="search" aria-label="Search rides"
+                        style="padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfeff);border:1px solid #eef6ff">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            style="opacity:.9; margin-right:6px">
+                            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.2"
+                                stroke-linecap="round" />
+                            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <input aria-label="Search" placeholder="Search rides..."
+                            style="border:0;background:transparent;outline:0;font-size:14px" />
+                    </div>
+
+                    <div class="user-area">
+                        {% if user.is_authenticated %}
+                        <div class="user-name" style="font-weight:700">{{ user.first_name|default:user.username }}</div>
+                        <div class="avatar" id="userMenuBtn">{{ user.first_name|default:user.username|slice:":1"|upper}}
+                        </div>
+                        {% else %}
+                        <a href="{% url 'rides:login' %}" class="btn">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <main class="container" role="main">
+                {% if messages %}
+                <div class="messages" aria-live="polite">
+                    {% for message in messages %}
+                    {% if 'error' in message.tags %}
+                    <div class="msg error">{{ message }}</div>
+                    {% elif 'success' in message.tags %}
+                    <div class="msg success">{{ message }}</div>
+                    {% else %}
+                    <div class="msg info">{{ message }}</div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+
+            <footer style="text-align:center;color:var(--muted);margin:18px 0 34px;">
+                © {% now "Y" %} Carpooling — Built with care
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const app = document.getElementById('appRoot');
+
+            // support collapsed state (toggles class on root sidebar)
+            toggle && toggle.addEventListener('click', () => {
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    app.classList.remove('sidebar-collapsed');
+                } else {
+                    sidebar.classList.add('collapsed');
+                    app.classList.add('sidebar-collapsed');
+                }
+            });
+
+            // simple user menu (small dropdown)
+            const userBtn = document.getElementById('userMenuBtn');
+            if (userBtn) {
+                userBtn.addEventListener('click', (e) => {
+                    let el = document.getElementById('__user_popup');
+                    if (el) { el.remove(); return; }
+                    el = document.createElement('div');
+                    el.id = '__user_popup';
+                    el.style.position = 'absolute';
+                    el.style.right = '22px';
+                    el.style.top = (userBtn.getBoundingClientRect().bottom + window.scrollY + 8) + 'px';
+                    el.style.background = 'white';
+                    el.style.borderRadius = '10px';
+                    el.style.boxShadow = '0 8px 30px rgba(4,88,150,0.08)';
+                    el.style.padding = '8px';
+                    el.style.zIndex = 2000;
+                    const menu = [
+                        ['Profile', '{% url "rides:profile" %}'],
+                        ['My Rides', '{% url "rides:my_rides" %}'],
+                        ['Logout', '{% url "rides:logout" %}']
+                    ];
+                    menu.forEach(item => {
+                        const a = document.createElement('a');
+                        a.href = item[1];
+                        a.textContent = item[0];
+                        a.style.display = 'block';
+                        a.style.padding = '8px 12px';
+                        a.style.color = '#0b2540';
+                        a.style.fontWeight = '600';
+                        a.style.borderRadius = '8px';
+                        a.addEventListener('mouseenter', () => a.style.background = 'rgba(0,0,0,0.04)');
+                        a.addEventListener('mouseleave', () => a.style.background = 'transparent');
+                        el.appendChild(a);
+                    });
+                    document.body.appendChild(el);
+                    setTimeout(() => {
+                        const remove = (ev) => {
+                            if (!el.contains(ev.target) && ev.target !== userBtn) {
+                                el.remove();
+                                document.removeEventListener('click', remove);
+                            }
+                        };
+                        document.addEventListener('click', remove);
+                    }, 0);
+                });
+            }
+
+            // close sidebar on small screens by default
+            function adjustForWidth() {
+                if (window.innerWidth < 980) {
+                    sidebar.style.display = 'none';
+                } else {
+                    sidebar.style.display = 'flex';
+                }
+            }
+            adjustForWidth();
+            window.addEventListener('resize', adjustForWidth);
+        })();
+    </script>
+</body>
+
+</html>

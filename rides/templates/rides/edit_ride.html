@@ -1,0 +1,45 @@
+{% extends 'rides/base.html' %}
+{% block title %}Edit Ride — Carpooling{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin:0 0 10px 0">Edit Ride</h2>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="field">
+            <label>Source</label>
+            {{ form.source }}
+        </div>
+        <div class="field">
+            <label>Destination</label>
+            {{ form.destination }}
+        </div>
+        <div class="field">
+            <label>Arrival date & time</label>
+            {{ form.arrivaldate }}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field">
+                <label>Seats (you reserve)</label>
+                {{ form.passenger }}
+            </div>
+            <div class="field">
+                <label>Sharable?</label>
+                {{ form.sharable }}
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Special notes</label>
+            {{ form.special }}
+        </div>
+
+        <div style="margin-top:12px">
+            <button class="btn" type="submit">Save changes</button>
+            <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

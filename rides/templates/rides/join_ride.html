@@ -1,0 +1,23 @@
+{% extends 'rides/base.html' %}
+{% block title %}Join Ride{% endblock %}
+{% block content %}
+<h2>Join Ride</h2>
+<div>
+    <p><strong>{{ ride.source }} → {{ ride.destination }}</strong></p>
+    <p>When: {{ ride.arrivaldate|date:"Y-m-d H:i" }}</p>
+    <p>Driver: {% if ride.driver %}{{ ride.driver.username }}{% else %}<span class="muted">Unassigned</span>{% endif %}
+    </p>
+    <p>Seats left: {% if ride.available_seats is not None %}{{ ride.available_seats }}{% else %}<span
+            class="muted">Unknown</span>{% endif %}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Seats to book</label><br>
+    <input name="passenger_count" type="number" value="1" min="1">
+    <div style="margin-top:10px">
+        <button class="btn" type="submit">Join</button>
+        <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

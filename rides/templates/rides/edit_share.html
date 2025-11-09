@@ -1,0 +1,21 @@
+{% extends 'rides/base.html' %}
+{% block title %}Edit Share — Carpooling{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin:0 0 10px 0">Update your share</h2>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="field">
+            <label>Seats</label>
+            {{ form.passenger_count }}
+            {% if form.passenger_count.errors %}<div class="error">{{ form.passenger_count.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div style="margin-top:10px">
+            <button class="btn" type="submit">Update</button>
+            <a class="btn ghost" href="{% url 'rides:dashboard' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

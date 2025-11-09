@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login | Carpooling</title>
+    <style>
+        :root {
+            --sky-1: #e9f7ff;
+            --accent-1: #00b4ff;
+            --accent-2: #007acc;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --muted: #64748b;
+            --danger: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--sky-1) 0%, #ffffff 60%);
+            padding: 28px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            background: var(--card-bg);
+            padding: 34px;
+            box-shadow: 0 10px 30px rgba(4, 88, 150, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 42px rgba(4, 88, 150, 0.12);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 6px 18px rgba(0, 122, 204, 0.18);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--accent-2);
+            font-weight: 600;
+        }
+
+        p.sub {
+            margin: 8px 0 26px;
+            font-size: 14px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        form {
+            display: block;
+        }
+
+        .field {
+            position: relative;
+            margin-top: 12px;
+        }
+
+        .control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(180deg, #fbfeff, #f7fdff);
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(3, 102, 153, 0.06);
+            transition: box-shadow .16s ease, border-color .16s ease, transform .08s ease;
+        }
+
+        .control:focus-within {
+            border-color: var(--accent-1);
+            box-shadow: 0 6px 24px rgba(0, 153, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, #ffffff88, #eaf8ff);
+            flex: 0 0 36px;
+        }
+
+        .icon svg {
+            width: 18px;
+            height: 18px;
+            opacity: .95;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            border: 0;
+            outline: 0;
+            background: transparent;
+            flex: 1;
+            font-size: 15px;
+            padding: 10px 0 8px 0;
+            color: #0b2540;
+        }
+
+        /* Floating labels */
+        label.floating {
+            position: absolute;
+            left: 56px;
+            top: 12px;
+            font-size: 13px;
+            color: var(--muted);
+            pointer-events: none;
+            transform-origin: left top;
+            transition: transform .14s ease, font-size .14s ease, top .14s ease, color .14s ease;
+        }
+
+        .control input:focus+label.floating,
+        .control input:not(:placeholder-shown)+label.floating {
+            transform: translateY(-14px) scale(.86);
+            top: 6px;
+            color: var(--accent-2);
+        }
+
+        .error {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 6px;
+        }
+
+        .actions {
+            margin-top: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            color: white;
+            border: 0;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 122, 204, 0.12);
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 36px rgba(0, 122, 204, 0.18);
+        }
+
+        .ghost {
+            background: transparent;
+            border: 1px solid rgba(0, 122, 204, 0.2);
+            color: var(--accent-2);
+        }
+
+        .ghost:hover {
+            background: var(--accent-1);
+            color: #fff;
+        }
+
+        .alt {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .alt a {
+            color: var(--accent-2);
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="brand">
+            <div class="logo">CP</div>
+            <div>
+                <h2>Carpooling</h2>
+                <div style="font-size:13px;color:var(--muted)">Smart rides, fewer cars</div>
+            </div>
+        </div>
+        <p class="sub">Welcome back — sign in to continue</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="field {% if form.username.errors %}has-error{% endif %}">
+                <div class="control">
+                    <div class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    {{ form.username }}
+                    <label class="floating" for="{{ form.username.id_for_label }}">Username</label>
+                </div>
+                {% if form.username.errors %}
+                <div class="error">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="field {% if form.password.errors %}has-error{% endif %}">
+                <div class="control">
+                    <div class="icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    {{ form.password }}
+                    <label class="floating" for="{{ form.password.id_for_label }}">Password</label>
+                </div>
+                {% if form.password.errors %}
+                <div class="error">{{ form.password.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn">Login</button>
+                <a href="{% url 'rides:register' %}" class="btn ghost">Register</a>
+            </div>
+        </form>
+
+        <div class="alt">
+            <a href="#">Forgot Password?</a>
+        </div>
+    </div>
+</body>
+
+</html>

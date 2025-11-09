@@ -1,0 +1,57 @@
+{% extends 'rides/base.html' %}
+{% block title %}Ride Detail{% endblock %}
+{% block content %}
+<h2>Ride Details</h2>
+<p><strong>{{ ride.source }} → {{ ride.destination }}</strong></p>
+<p>When: {{ ride.arrivaldate|date:"Y-m-d H:i" }}</p>
+<p>Creator: {{ ride.rider.username }}</p>
+<p>
+    Driver:
+    {% if ride.driver %}
+    {{ ride.driver.username }} — <em>{{ ride.get_assignment_status_display }}</em>
+    {% else %}
+    <span class="muted">Unassigned</span>
+    {% endif %}
+</p>
+<p>Seats reserved by creator: {{ ride.passenger }}</p>
+
+<h4>Sharers</h4>
+<ul>
+    {% for s in ride.rideshare_set.all %}
+    <li>{{ s.sharer.username }} — {{ s.passenger_count }}</li>
+    {% empty %}
+    <li class="muted">No sharers</li>
+    {% endfor %}
+</ul>
+
+<p>Status: {{ ride.get_status_display }}</p>
+
+<div class="actions-row">
+    {% if user == ride.rider and ride.status == 'open' %}
+    <a class="btn" href="{% url 'rides:assign_driver' ride.id %}">Assign Driver</a>
+    <a class="btn ghost" href="{% url 'rides:edit_ride' ride.id %}">Edit</a>
+    {% endif %}
+
+    {% if user == ride.driver and ride.assignment_status == 'pending' %}
+    <form method="post" action="{% url 'rides:accept_assignment' ride.id %}" style="display:inline">{% csrf_token %}<button class="btn">Accept</button>
+    </form>
+    <form method="post" action="{% url 'rides:reject_assignment' ride.id %}" style="display:inline">{% csrf_token %}<button class="btn ghost">Reject</button>
+    </form>
+    {% endif %}
+
+    {% if user == ride.driver and ride.assignment_status == 'accepted' and ride.status == 'open' %}
+    <form method="post" action="{% url 'rides:start_ride' ride.id %}">{% csrf_token %}
+        <button class="btn">Start Ride</button>
+    </form>
+    {% elif user == ride.driver and ride.status == 'driving' %}
+    <form method="post" action="{% url 'rides:complete_ride' ride.id %}">{% csrf_token %}
+        <button class="btn">Complete Ride</button>
+    </form>
+    {% endif %}
+
+    {% if user.userprofile.role != 'driver' and ride.sharable and ride.assignment_status == 'accepted' and ride.status == 'open' %}
+    <a class="btn" href="{% url 'rides:join_ride' ride.id %}">Join Ride</a>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends 'rides/base.html' %}
+{% block title %}Register as Driver{% endblock %}
+
+{% block content %}
+<style>
+    /* Driver form scoped styles */
+    .driver-wrap {
+        max-width: 760px;
+        margin: 18px auto;
+        padding: 12px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 10px 28px rgba(4, 88, 150, 0.06);
+    }
+
+    h2.page-title {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        color: var(--text);
+    }
+
+    .lead {
+        color: var(--muted);
+        margin-bottom: 12px;
+    }
+
+    .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width:720px) {
+        .grid {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    label.field-label {
+        font-weight: 700;
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="number"],
+    textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #e8f3fb;
+        background: linear-gradient(180deg, #fff, #fbfeff);
+        font-size: 14px;
+        color: var(--text);
+        outline: none;
+    }
+
+    textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .helper {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+    }
+
+    .error {
+        color: #b45309;
+        font-weight: 700;
+        margin-top: 6px;
+        font-size: 13px;
+    }
+
+    .actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .btn {
+        background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 0;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn.ghost {
+        background: transparent;
+        border: 1px solid rgba(3, 102, 153, 0.12);
+        color: var(--accent-2);
+        padding: 9px 12px;
+        border-radius: 10px;
+    }
+
+    .inline-note {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 8px;
+    }
+</style>
+
+<div class="driver-wrap">
+    <div class="card" role="region" aria-labelledby="driverTitle">
+        <h2 id="driverTitle" class="page-title">Driver Profile</h2>
+        <div class="lead">Add or update your driver details so others can join your rides.</div>
+
+        <form method="post" id="driverForm" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="grid">
+                <div class="field">
+                    <label class="field-label" for="{{ form.contact.id_for_label }}">Contact</label>
+                    {{ form.contact }}
+                    {% if form.contact.errors %}<div class="error">{{ form.contact.errors }}</div>{% endif %}
+                    <div class="helper">Phone or messaging handle (visible to assigned riders).</div>
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="{{ form.vehicle.id_for_label }}">Vehicle</label>
+                    {{ form.vehicle }}
+                    {% if form.vehicle.errors %}<div class="error">{{ form.vehicle.errors }}</div>{% endif %}
+                    <div class="helper">Make/model (e.g. Toyota Innova).</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="field">
+                    <label class="field-label" for="{{ form.plate.id_for_label }}">Plate number</label>
+                    {{ form.plate }}
+                    {% if form.plate.errors %}<div class="error">{{ form.plate.errors }}</div>{% endif %}
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="{{ form.capacity.id_for_label }}">Capacity (seats)</label>
+                    {{ form.capacity }}
+                    {% if form.capacity.errors %}<div class="error">{{ form.capacity.errors }}</div>{% endif %}
+                    <div id="capacityHint" class="helper">Enter number of passenger seats (positive integer).</div>
+                </div>
+            </div>
+
+            <div class="field" style="margin-top:8px">
+                <label class="field-label" for="{{ form.special.id_for_label }}">Special notes (optional)</label>
+                {{ form.special }}
+                {% if form.special.errors %}<div class="error">{{ form.special.errors }}</div>{% endif %}
+                <div class="helper">e.g. "Boot space available", "Non-smoking vehicle", "Leaves from campus gate".</div>
+            </div>
+
+            <div class="actions">
+                <button id="saveDriver" class="btn" type="submit">Save</button>
+                <a class="btn ghost" href="{% url 'rides:profile' %}">Cancel</a>
+            </div>
+
+            <div class="inline-note">Note: server-side validation enforces capacity & required fields. Client-side
+                checks only help UX.</div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('driverForm');
+        const capacityField = form.querySelector('[name="{{ form.capacity.name }}"]');
+        const saveBtn = document.getElementById('saveDriver');
+
+        function showClientError(el, msg) {
+            let next = el.parentElement.querySelector('.error.client');
+            if (!next) {
+                next = document.createElement('div');
+                next.className = 'error client';
+                el.parentElement.appendChild(next);
+            }
+            next.textContent = msg;
+        }
+        function clearClientErrors() { form.querySelectorAll('.error.client').forEach(e => e.remove()); }
+
+        form.addEventListener('submit', function (e) {
+            clearClientErrors();
+            let ok = true;
+
+            // capacity must be positive integer
+            if (capacityField) {
+                const v = capacityField.value.trim();
+                if (!v || isNaN(v) || Number(v) <= 0 || !Number.isInteger(Number(v))) {
+                    showClientError(capacityField, 'Please enter a positive whole number for capacity.');
+                    ok = false;
+                }
+            }
+
+            if (!ok) {
+                e.preventDefault();
+                return false;
+            }
+            // allow submit (server will validate)
+        });
+
+        // optional: restrict capacity input to digits only on input
+        if (capacityField) {
+            capacityField.addEventListener('input', function (e) {
+                this.value = this.value.replace(/[^\d]/g, '');
+            });
+        }
+    })();
+</script>
+{% endblock %}

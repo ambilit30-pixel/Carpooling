@@ -1,0 +1,518 @@
+{% extends 'rides/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Local dashboard styles (scoped to this template) */
+    .top-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+        align-items: center;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(4, 88, 150, 0.06);
+        margin-bottom: 16px;
+    }
+
+    .panel.head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px;
+    }
+
+    .panel h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #0b2540;
+    }
+
+    .small {
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    .stats {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .stat {
+        background: linear-gradient(180deg, #fbfdff, #f5fbff);
+        border-radius: 10px;
+        padding: 10px 12px;
+        min-width: 140px;
+    }
+
+    .stat strong {
+        display: block;
+        font-size: 18px;
+        color: #063b66;
+    }
+
+    table.db-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    table.db-table thead th {
+        text-align: left;
+        padding: 10px;
+        font-weight: 600;
+        color: #0b2540;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    table.db-table tbody td {
+        padding: 10px;
+        border-bottom: 1px solid #f8fafc;
+        color: var(--muted);
+        vertical-align: middle;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 12px;
+        color: #fff;
+        background: #00b4ff;
+    }
+
+    .ghost-small {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid rgba(0, 122, 204, 0.08);
+        color: var(--accent-2);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .muted-inline {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .actions-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .empty {
+        padding: 14px;
+        color: var(--muted);
+        border-radius: 8px;
+        background: linear-gradient(180deg, #fbfeff, #ffffff);
+    }
+
+    @media (max-width:820px) {
+        .stats {
+            flex-direction: column;
+        }
+
+        .panel.head {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px
+        }
+    }
+</style>
+
+<div class="panel head">
+    <div>
+        <h2 style="margin:0 0 6px 0">Dashboard <span class="small">({{ role|default:user.userprofile.role }})</span>
+        </h2>
+        <div class="small">Welcome back, <strong>{{ user.first_name|default:user.username }}</strong></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="stats" aria-hidden="true">
+            <div class="stat">
+                <div class="small">Active rides</div><strong>{{ accepted|length|default:0 }}</strong>
+            </div>
+            <div class="stat">
+                <div class="small">Created</div><strong>{{ offered|length|default:0 }}</strong>
+            </div>
+            <div class="stat">
+                <div class="small">Joined</div><strong>{{ shared_rides|length|default:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="top-actions" style="margin-left:12px">
+            <a class="btn" href="{% url 'rides:create_ride' %}">Create Ride</a>
+            <a class="btn ghost" href="{% url 'rides:find_rides_to_share' %}">Search Rides</a>
+
+            {% if user.userprofile.role == 'driver' %}
+            <form method="post" action="{% url 'rides:set_role_passenger' %}" style="display:inline;">{% csrf_token %}
+                <button class="btn ghost-small" type="submit">Switch to Passenger</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'rides:set_role_driver' %}" style="display:inline;">{% csrf_token %}
+                <button class="btn ghost-small" type="submit">Switch to Driver</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if role == 'driver' %}
+<!-- DRIVER: Pending Assignments -->
+<div class="panel">
+    <h3>Pending Assignments</h3>
+
+    {% if pending %}
+    <table class="db-table" aria-label="Pending assignments">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:140px">When</th>
+                <th>Creator</th>
+                <th style="width:110px">Committed</th>
+                <th style="width:110px">Capacity</th>
+                <th style="width:240px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in pending %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.rider.username }}</td>
+                <td>{{ r.total_committed }}</td>
+                <td>{{ r.driver.userprofile.capacity }}</td>
+                <td>
+                    <div class="actions-row">
+                        <form style="display:inline" method="post" action="{% url 'rides:accept_assignment' r.id %}">{%csrf_token %}
+                            <button class="btn" type="submit">Accept</button>
+                        </form>
+                        <form style="display:inline" method="post" action="{% url 'rides:reject_assignment' r.id %}">{%csrf_token %}
+                            <button class="btn ghost" type="submit">Reject</button>
+                        </form>
+                        <a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">Details</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No pending assignments.</div>
+    {% endif %}
+</div>
+
+<!-- DRIVER: Accepted / Active Rides -->
+<div class="panel">
+    <h3>Accepted / Active Rides</h3>
+
+    {% if accepted %}
+    <table class="db-table" aria-label="Accepted rides">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:120px">Status</th>
+                <th style="width:220px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in accepted %}
+            {% if r.status != 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td><span class="badge">{{ r.get_status_display }}</span></td>
+                <td>
+                    <div class="actions-row">
+                        {% if r.status == 'open' %}
+                        <form method="post" action="{% url 'rides:start_ride' r.id %}">{% csrf_token %}<button class="btn" type="submit">Start</button>
+                        </form>
+                        {% elif r.status == 'driving' %}
+                        <form method="post" action="{% url 'rides:complete_ride' r.id %}">{% csrf_token %}<button class="btn" type="submit">Complete</button>
+                        </form>
+                        {% endif %}
+                        <a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">Details</a>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No active rides.</div>
+    {% endif %}
+</div>
+
+<!-- DRIVER: Completed Rides -->
+<div class="panel">
+    <h3>Completed Rides</h3>
+    <div class="small">Rides you've completed as driver or rides you created that are completed.</div>
+
+    {# show completed rides from accepted and offered #}
+    {% comment %} Combined list: accepted completed first, offered completed next {% endcomment %}
+    {% with completed_found=False %}
+    <table class="db-table" aria-label="Completed rides">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th>Role</th>
+                <th style="width:120px">Status</th>
+                <th style="width:120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in accepted %}
+            {% if r.status == 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>Driver</td>
+                <td>{{ r.get_status_display }}</td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+
+            {% for r in offered %}
+            {% if r.status == 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>Creator</td>
+                <td>{{ r.get_status_display }}</td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endwith %}
+</div>
+
+<!-- DRIVER: Rides I Created (non-completed) -->
+<div class="panel">
+    <h3>Rides I Created</h3>
+    {% if offered %}
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:120px">Status</th>
+                <th style="width:120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in offered %}
+            {% if r.status != 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.get_status_display }}</td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No rides created yet.</div>
+    {% endif %}
+</div>
+
+{% else %}
+<!-- PASSENGER DASHBOARD -->
+
+<!-- Rides I Created (active / open) -->
+<div class="panel">
+    <h3>Rides I Created</h3>
+    {% if user_rides %}
+    <table class="db-table" aria-label="My rides">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:160px">Driver</th>
+                <th style="width:100px">Seats</th>
+                <th style="width:120px">Status</th>
+                <th style="width:160px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in user_rides %}
+            {% if r.status != 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>
+                    {% if r.driver %}
+                    {{ r.driver.username }}
+                    {% if r.assignment_status != 'accepted' %}
+                    <div class="muted-inline">({{ r.assignment_status }})</div>
+                    {% endif %}
+                    {% else %}
+                    <span class="muted-inline">Unassigned</span>
+                    {% endif %}
+                </td>
+                <td>{% if r.available_seats is not None %}{{ r.available_seats }}{% else %}<span
+                        class="muted-inline">Driver unassigned / capacity not set</span>{% endif %}</td>
+                <td>{{ r.get_status_display }}</td>
+                <td>
+                    <div class="actions-row">
+                        {% if r.status == 'open' %}
+                        <a class="btn" href="{% url 'rides:edit_ride' r.id %}">Edit</a>
+                        <form style="display:inline" method="post" action="{% url 'rides:delete_ride' r.id %}">{%csrf_token %}
+                            <button class="btn ghost" type="submit">Delete</button>
+                        </form>
+                        <a class="btn ghost" href="{% url 'rides:assign_driver' r.id %}">Assign Driver</a>
+                        {% else %}
+                        <a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">You haven't created any rides yet.</div>
+    {% endif %}
+</div>
+
+<!-- Completed Rides I Created (passenger view) -->
+<div class="panel">
+    <h3>Completed (Created)</h3>
+    <div class="small">Rides you created that reached completion.</div>
+
+    {% if user_rides %}
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:120px">Status</th>
+                <th style="width:120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in user_rides %}
+            {% if r.status == 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.get_status_display }}</td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No completed rides you created.</div>
+    {% endif %}
+</div>
+
+<!-- Rides I Joined (active) -->
+<div class="panel">
+    <h3>Rides I Joined</h3>
+    {% if shared_rides %}
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:160px">Driver</th>
+                <th style="width:120px">Seats Booked</th>
+                <th style="width:120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in shared_rides %}
+            {% if r.status != 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>{% if r.driver %}{{ r.driver.username }}{% else %}<span class="muted-inline">Unassigned</span>{%endif %}</td>
+                <td>
+                    {% with 0 as mycount %}
+                    {% for s in r.rideshare_set.all %}
+                    {% if s.sharer == user %}
+                    {% with s.passenger_count as mycount %}{% endwith %}
+                    {% endif %}
+                    {% endfor %}
+                    {{ mycount }}
+                    {% endwith %}
+                </td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">You haven't joined any rides.</div>
+    {% endif %}
+</div>
+
+<!-- Completed Rides I Joined (passenger view) -->
+<div class="panel">
+    <h3>Completed (Joined)</h3>
+    <div class="small">Rides you joined that have completed.</div>
+
+    {% if shared_rides %}
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th style="width:160px">When</th>
+                <th style="width:160px">Driver</th>
+                <th style="width:120px">Seats Booked</th>
+                <th style="width:120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in shared_rides %}
+            {% if r.status == 'completed' %}
+            <tr>
+                <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                <td class="muted-inline">{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                <td>{% if r.driver %}{{ r.driver.username }}{% else %}<span class="muted-inline">Unassigned</span>{%endif %}</td>
+                <td>
+                    {% with 0 as mycount %}
+                    {% for s in r.rideshare_set.all %}
+                    {% if s.sharer == user %}
+                    {% with s.passenger_count as mycount %}{% endwith %}
+                    {% endif %}
+                    {% endfor %}
+                    {{ mycount }}
+                    {% endwith %}
+                </td>
+                <td><a class="btn ghost" href="{% url 'rides:ride_detail' r.id %}">View</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No completed joined rides.</div>
+    {% endif %}
+</div>
+
+{% endif %}
+{% endblock %}

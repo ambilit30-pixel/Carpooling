@@ -1,0 +1,303 @@
+{% extends 'rides/base.html' %}
+{% block title %}My Rides — Carpooling{% endblock %}
+
+{% block content %}
+<style>
+    .wrap {
+        max-width: 980px;
+        margin: 12px auto
+    }
+
+    .card {
+        background: #fff;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(3, 102, 153, 0.06);
+        margin-bottom: 16px
+    }
+
+    h2 {
+        margin: 0 0 8px;
+        color: #0b2540
+    }
+
+    .muted {
+        color: #64748b;
+        margin-bottom: 12px
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse
+    }
+
+    th,
+    td {
+        padding: 10px 8px;
+        text-align: left;
+        border-bottom: 1px solid #eef6ff
+    }
+
+    .small {
+        font-size: 13px;
+        color: #6b7280
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #00b4ff, #007acc);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700
+    }
+
+    .ghost {
+        background: transparent;
+        border: 1px solid rgba(0, 122, 204, 0.12);
+        color: #007acc;
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600
+    }
+
+    .danger {
+        background: #e53935
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 8px;
+        border-radius: 999px;
+        background: #eef7ff;
+        color: #0369a1;
+        font-weight: 600;
+        font-size: 13px
+    }
+
+    .muted-cell {
+        color: #94a3b8
+    }
+
+    .actions a {
+        margin-right: 8px
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 12px
+    }
+
+    @media (max-width:880px) {
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start
+        }
+    }
+</style>
+
+<div class="wrap">
+    <div class="card">
+        <div class="section-header">
+            <div>
+                <h2>My Rides</h2>
+                <div class="muted">Overview of rides you created, rides assigned to you (as driver), and rides you
+                    joined.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <a class="btn" href="{% url 'rides:create_ride' %}">Create Ride</a>
+                <a class="ghost" href="{% url 'rides:my_rides' %}">Find Rides</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Created rides -->
+    <div class="card">
+        <h3 style="margin-top:0">Rides I Created</h3>
+        <div class="muted">These rides you posted (you are the rider/creator).</div>
+
+        {% if created_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>When</th>
+                    <th>Driver</th>
+                    <th>Seats left</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in created_rides %}
+                <tr>
+                    <td>
+                        <strong>{{ r.source }}</strong> → {{ r.destination }}
+                        {% if r.special %}<div class="small">{{ r.special }}</div>{% endif %}
+                    </td>
+                    <td>{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if r.driver %}
+                        {{ r.driver.username }}
+                        {% if r.assignment_status %}<div class="small">({{ r.assignment_status }})</div>{% endif %}
+                        {% else %}
+                        <span class="muted-cell">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% with seats=r.available_seats %}
+                        {% if seats is None %}
+                        <span class="small">Unknown</span>
+                        {% else %}
+                        <span class="badge">{{ seats }}</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ r.get_status_display }}</td>
+                    <td class="actions">
+                        {% if r.status == r.STATUS_OPEN %}
+                        <a class="btn" href="{% url 'rides:edit_ride' r.id %}">Edit</a>
+                        <form method="post" action="{% url 'rides:delete_ride' r.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button class="ghost" type="submit" onclick="return confirm('Delete ride?')">Delete</button>
+                        </form>
+                        {% if not r.driver %}
+                        <a class="btn" href="{% url 'rides:assign_driver' r.id %}">Assign Driver</a>
+                        {% endif %}
+                        {% else %}
+                        <span class="small">No actions</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="small">You have not created any rides yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- Assigned rides (driver) -->
+    <div class="card">
+        <h3 style="margin-top:0">Rides Assigned to Me (as Driver)</h3>
+        <div class="muted">Rides where you are the assigned driver. You can accept or reject assignments if pending.
+        </div>
+
+        {% if assigned_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>When</th>
+                    <th>Creator</th>
+                    <th>Seats</th>
+                    <th>Assignment</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in assigned_rides %}
+                <tr>
+                    <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                    <td>{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                    <td>{{ r.rider.username }}</td>
+                    <td>
+                        {% with seats=r.available_seats %}
+                        {% if seats is None %}<span class="small">Unknown</span>{% else %}<span class="badge">{{ seats}}</span>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% if r.assignment_status %}<div class="small">{{ r.assignment_status }}</div>{% else %}<div
+                            class="small">-</div>{% endif %}
+                    </td>
+                    <td class="actions">
+                        {% if r.assignment_status == r.ASSIGN_PENDING %}
+                        <form method="post" action="{% url 'rides:accept_assignment' r.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button class="btn" type="submit">Accept</button>
+                        </form>
+                        <form method="post" action="{% url 'rides:reject_assignment' r.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button class="ghost" type="submit">Reject</button>
+                        </form>
+                        {% endif %}
+
+                        {% if r.status == r.STATUS_OPEN %}
+                        <a class="btn" href="{% url 'rides:ride_detail' r.id %}">Details</a>
+                        {% else %}
+                        <span class="small">No actions</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="small">No rides assigned to you.</div>
+        {% endif %}
+    </div>
+
+    <!-- Joined rides -->
+    <div class="card">
+        <h3 style="margin-top:0">Rides I Joined</h3>
+        <div class="muted">Rides you joined as a sharer.</div>
+
+        {% if joined_rides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>When</th>
+                    <th>Driver</th>
+                    <th>Seats booked</th>
+                    <th>Seats left</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in joined_rides %}
+                <tr>
+                    <td><strong>{{ r.source }}</strong> → {{ r.destination }}</td>
+                    <td>{{ r.arrivaldate|date:"Y-m-d H:i" }}</td>
+                    <td>{% if r.driver %}{{ r.driver.username }}{% else %}<span class="muted-cell">Unassigned</span>{%endif %}</td>
+                    <td>
+                        {% comment %} safe lookup for rideshare belonging to current user {% endcomment %}
+                        {% with share=r.rideshare_set.all|dictsort:"id" %}
+                        {% with user_share=None %}
+                        {% for s in r.rideshare_set.all %}
+                        {% if s.sharer == user %}
+                        {% with s.passenger_count as user_share %}{% endwith %}
+                        {% endif %}
+                        {% endfor %}
+                        {% if user_share %}{{ user_share }}{% else %}<span class="small">-</span>{% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% with seats=r.available_seats %}
+                        {% if seats is None %}<span class="small">Unknown</span>{% else %}<span class="badge">{{ seats}}</span>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="actions">
+                        <form method="post" action="{% url 'rides:leave_ride' r.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button class="ghost" type="submit"
+                                onclick="return confirm('Leave this ride?')">Leave</button>
+                        </form>
+                        <a class="btn" href="{% url 'rides:edit_share' r.id %}">Edit Share</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="small">You have not joined any rides.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
